@@ -35,3 +35,6 @@ lerna-debug.log*
 
 # Postgrest configuration
 **/postgrest.conf
+
+# ASDI Environment Variables
+./server/src/modules/asdi/.env
