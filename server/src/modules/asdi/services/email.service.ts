@@ -1,3 +1,4 @@
+
 import { Injectable } from '@nestjs/common';
 import * as nodemailer from 'nodemailer';
 import { ConfigService } from '@nestjs/config';
@@ -9,19 +10,36 @@ export class EmailService {
   private transporter;
 
   constructor(private configService: ConfigService) {
+
+    console.log('[EmailService] Initializing and loading .env');
+
     // Load config from ASDI module's .env
     const envPath = path.resolve(__dirname, '../.env');
     dotenv.config({ path: envPath });
 
-    this.transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST || 'smtp.gmail.com',
-      port: parseInt(process.env.SMTP_PORT) || 587,
-      secure: false,
-      auth: {
+    if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
+      console.error('[EmailService] Missing SMTP credentials!', {
         user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS,
-      },
-    });
+        pass: process.env.SMTP_PASS ? '***' : undefined,
+        envPath,
+      });
+    }
+
+    try {
+      this.transporter = nodemailer.createTransport({
+        host: process.env.SMTP_HOST || 'smtp.gmail.com',
+        port: parseInt(process.env.SMTP_PORT) || 587,
+        secure: false,
+        auth: {
+          user: process.env.SMTP_USER,
+          pass: process.env.SMTP_PASS,
+        },
+      });
+
+    } catch (err) {
+      console.error('[EmailService] Error creating transporter:', err);
+    }
+
   }
 
   async sendEmail(params: {
@@ -29,6 +47,7 @@ export class EmailService {
     subject: string;
     body: string;
   }) {
+    console.log('[EmailService] sendEmail called with params:', params);
     try {
       const mailOptions = {
         from: process.env.SMTP_FROM || 'noreply@tooljet.io',
@@ -40,6 +59,7 @@ export class EmailService {
       const result = await this.transporter.sendMail(mailOptions);
       return { success: true, messageId: result.messageId };
     } catch (error) {
+      console.error('[EmailService] Email sending failed:', error);
       throw new Error(`Email sending failed: ${error.message}`);
     }
   }
