@@ -30,7 +30,7 @@
 /frontend/.firebase
 /.env
 /.env.test
-./server/src/modules/asdi/.env
+/server/src/modules/asdi/.env
 /docs/.firebase
 /docs/.firebaserc
 /node_modules

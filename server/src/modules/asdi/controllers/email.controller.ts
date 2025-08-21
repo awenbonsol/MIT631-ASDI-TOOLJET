@@ -1,5 +1,6 @@
 
-import { Controller, Post, Body, UseGuards } from '@nestjs/common';
+import { Controller, Post, Body, ValidationPipe } from '@nestjs/common';
+import { SendEmailDto } from '../dto/email.dto';
 import { EmailService } from '../services/email.service';
 // import { JwtAuthGuard } from '../../session/guards/jwt-auth.guard';
 
@@ -12,12 +13,7 @@ export class EmailController {
 
   @Post('send')
   async sendEmail(
-    @Body()
-    payload: {
-      to: string;
-      subject: string;
-      body: string;
-    }
+    @Body(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true })) payload: SendEmailDto
   ) {
     return await this.emailService.sendEmail(payload);
   }

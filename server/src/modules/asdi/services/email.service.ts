@@ -4,6 +4,8 @@ import * as nodemailer from 'nodemailer';
 import { ConfigService } from '@nestjs/config';
 import * as path from 'path';
 import * as dotenv from 'dotenv';
+import { SendEmailDto } from '../dto/email.dto';
+import { EmailResponseDto } from '../dto/email-response.dto';
 
 @Injectable()
 export class EmailService {
@@ -42,25 +44,31 @@ export class EmailService {
 
   }
 
-  async sendEmail(params: {
-    to: string | string[];
-    subject: string;
-    body: string;
-  }) {
+  async sendEmail(params: SendEmailDto): Promise<EmailResponseDto> {
     console.log('[EmailService] sendEmail called with params:', params);
+    // Normalize 'email recipient(s)' to array and display string
+    const toList = Array.isArray(params.to) ? params.to : [params.to];
+    const toDisplay = toList.join(', ');
     try {
       const mailOptions = {
         from: process.env.SMTP_FROM || 'noreply@tooljet.io',
-        to: params.to,
+        to: toList,
         subject: params.subject,
         html: params.body,
       };
 
       const result = await this.transporter.sendMail(mailOptions);
-      return { success: true, messageId: result.messageId };
+      return {
+        id: result.messageId,
+        status: 'OK',
+        message: `Successfully sent email to ${toDisplay}`,
+      };
     } catch (error) {
       console.error('[EmailService] Email sending failed:', error);
-      throw new Error(`Email sending failed: ${error.message}`);
+      return {
+        status: 'Error',
+        message: `Email sending failed to ${toDisplay}: ${error.message}`,
+      };
     }
   }
 }
